@@ -19,17 +19,27 @@ class AmazonConnector:
         """
         Initialize with Amazon SP-API credentials.
 
+        Works with OAuth tokens obtained through the web authorization flow.
+        No AWS credentials needed when using OAuth.
+
         Args:
             config: Dictionary containing Amazon API credentials
         """
+        # Build credentials dict - AWS keys are optional with OAuth flow
         self.credentials = {
             'refresh_token': config['refresh_token'],
             'lwa_app_id': config['lwa_app_id'],
             'lwa_client_secret': config['lwa_client_secret'],
-            'aws_access_key': config['aws_access_key'],
-            'aws_secret_key': config['aws_secret_key'],
-            'role_arn': config['role_arn'],
         }
+
+        # Add AWS credentials only if provided (for backwards compatibility)
+        if config.get('aws_access_key'):
+            self.credentials['aws_access_key'] = config['aws_access_key']
+        if config.get('aws_secret_key'):
+            self.credentials['aws_secret_key'] = config['aws_secret_key']
+        if config.get('role_arn'):
+            self.credentials['role_arn'] = config['role_arn']
+
         self.marketplace_id = config.get('marketplace_id', 'ATVPDKIKX0DER')
         self._set_marketplace()
 

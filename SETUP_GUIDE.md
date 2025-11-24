@@ -1,189 +1,208 @@
 # Amazon Seller Central to Dynamics 365 Integration
 
-Automatically sync shipped orders from Amazon to Microsoft Dynamics 365 Business Central.
+A web-based integration that syncs shipped orders from Amazon to Microsoft Dynamics 365 Business Central.
 
 ## What This Does
 
 When orders ship on Amazon, this integration:
 1. Fetches order details (SKUs, quantities, prices, customer info)
-2. Creates a sales invoice (or sales order) in Dynamics 365
+2. Creates sales invoices (or sales orders) in Dynamics 365
 3. Tracks processed orders to prevent duplicates
+4. Runs automatically on a schedule (optional)
+
+## Features
+
+- **Web-based UI** - No command line needed
+- **OAuth Login** - Click to authorize, no API keys to copy
+- **Dashboard** - See sync status at a glance
+- **Auto-sync** - Set it and forget it
+- **Order History** - Track all synced orders
 
 ## Prerequisites
 
 - Python 3.8 or higher
-- Amazon Seller Central account with SP-API access
+- Amazon Seller Central account
 - Microsoft Dynamics 365 Business Central subscription
-- Azure Active Directory app registration
+- Azure Active Directory (comes with D365)
 
-## Setup Instructions
+## Quick Start
 
-### Step 1: Install Python Dependencies
+### Step 1: Install Dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Step 2: Amazon Seller Central SP-API Setup
+### Step 2: Start the Web App
 
-1. **Register as a Developer**
-   - Go to Seller Central > Apps & Services > Develop Apps
-   - Click "Add new app client"
-   - Note your **LWA App ID** and **LWA Client Secret**
+```bash
+python app.py
+```
 
-2. **Create AWS IAM User**
-   - Go to AWS Console > IAM
-   - Create a new user with programmatic access
-   - Note the **Access Key** and **Secret Key**
-   - Create a role for the SP-API and note the **Role ARN**
+Open your browser to: **http://localhost:5000**
 
-3. **Get Refresh Token**
-   - In your Seller Central app, authorize it for your marketplace
-   - Complete the OAuth flow to get a **Refresh Token**
+### Step 3: Connect Amazon
 
-4. **Find Your Marketplace ID**
-   Common marketplace IDs:
-   - US: `ATVPDKIKX0DER`
-   - Canada: `A2EUQ1WTGCTBG2`
-   - UK: `A1F83G8C2ARO7P`
-   - Germany: `A1PA6795UKMFR9`
+1. Click **Setup** in the sidebar
+2. In the Amazon section, you'll need your **LWA App ID** and **Client Secret**
+3. Click **Connect to Amazon**
+4. Log into your Seller Central account and authorize the app
 
-### Step 3: Dynamics 365 Setup
+### Step 4: Connect Dynamics 365
 
-1. **Register Azure AD Application**
-   - Go to Azure Portal > Azure Active Directory > App registrations
-   - Click "New registration"
-   - Name it (e.g., "Amazon Integration")
-   - Note the **Application (client) ID** and **Directory (tenant) ID**
+1. In the Dynamics 365 section, enter your Azure AD credentials
+2. Click **Connect to Dynamics 365**
+3. Log into your Microsoft account and authorize
+4. Select your company
 
-2. **Create Client Secret**
-   - In your app registration, go to Certificates & secrets
-   - Create a new client secret
-   - Note the **Secret Value** (save immediately, it won't show again!)
+### Step 5: Sync Orders
 
-3. **Grant API Permissions**
-   - In your app registration, go to API permissions
-   - Add permission > APIs my organization uses
+1. Go to the **Dashboard**
+2. Click **Sync Now**
+3. Choose how many days to look back
+4. Watch your orders flow into Dynamics 365!
+
+---
+
+## Detailed Setup Instructions
+
+### Amazon Seller Central Setup
+
+Before connecting, you need to create an app in Amazon:
+
+1. Go to [Seller Central](https://sellercentral.amazon.com)
+2. Navigate to **Apps & Services** > **Develop Apps**
+3. Click **Add new app client**
+4. Fill in the app details:
+   - App name: "Dynamics 365 Integration" (or whatever you prefer)
+   - API Type: SP-API
+5. After creating, note your:
+   - **LWA Client ID** (looks like `amzn1.application-oa2-client.xxxxx`)
+   - **LWA Client Secret**
+6. Under **OAuth redirect URIs**, add:
+   ```
+   http://localhost:5000/callback/amazon
+   ```
+   (Use your actual domain in production)
+
+### Microsoft Dynamics 365 / Azure AD Setup
+
+1. Go to [Azure Portal](https://portal.azure.com)
+2. Navigate to **Azure Active Directory** > **App registrations**
+3. Click **New registration**
+4. Fill in:
+   - Name: "Amazon Integration"
+   - Supported account types: Single tenant
+   - Redirect URI: Web - `http://localhost:5000/callback/dynamics`
+5. After creating, note your:
+   - **Application (client) ID**
+   - **Directory (tenant) ID**
+6. Go to **Certificates & secrets** > **New client secret**
+   - Save the **Secret Value** immediately (it won't show again!)
+7. Go to **API permissions** > **Add a permission**
+   - Select **APIs my organization uses**
    - Search for "Dynamics 365 Business Central"
-   - Add `Financials.ReadWrite.All` permission
-   - Grant admin consent
+   - Add **Financials.ReadWrite.All**
+   - Click **Grant admin consent**
 
-4. **Get Company ID**
-   - In Business Central, go to your company
-   - The Company ID is in the URL or can be found via the API
+---
 
-5. **Get Environment Name**
-   - This is typically "Production" or "Sandbox"
-   - Found in Business Central admin center
+## Running in Production
 
-### Step 4: Create Configuration File
+### Using Gunicorn (Linux)
 
-1. Copy the template:
-   ```bash
-   cp config_template.json config.json
-   ```
-
-2. Edit `config.json` with your credentials:
-   ```json
-   {
-       "amazon": {
-           "refresh_token": "your-refresh-token",
-           "lwa_app_id": "amzn1.application-oa2-client.xxx",
-           "lwa_client_secret": "your-lwa-secret",
-           "aws_access_key": "AKIA...",
-           "aws_secret_key": "your-aws-secret",
-           "role_arn": "arn:aws:iam::123456789:role/your-role",
-           "marketplace_id": "ATVPDKIKX0DER"
-       },
-       "dynamics365": {
-           "tenant_id": "your-azure-tenant-id",
-           "client_id": "your-app-client-id",
-           "client_secret": "your-client-secret",
-           "environment": "Production",
-           "company_id": "your-company-guid"
-       },
-       "settings": {
-           "sync_interval_minutes": 60,
-           "days_to_look_back": 1,
-           "log_file": "integration.log"
-       }
-   }
-   ```
-
-## Usage
-
-### Run Once (Manual Sync)
 ```bash
-# Sync orders from the last day
-python main.py
-
-# Sync orders from a specific date
-python main.py --date 2024-01-15
-
-# Sync orders from last 7 days
-python main.py --days-back 7
-
-# Create sales orders instead of invoices
-python main.py --sales-order
-
-# Test without making changes (dry run)
-python main.py --dry-run
+pip install gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ```
 
-### Run Continuously (Scheduled)
-```bash
-# Run every hour (configured in config.json)
-python main.py --schedule
+### Using Docker
+
+Create a `Dockerfile`:
+
+```dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt gunicorn
+COPY . .
+EXPOSE 5000
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:5000", "app:app"]
 ```
 
-### Run as a Service (Windows)
-Create a Windows Task Scheduler task to run the script periodically.
-
-### Run as a Service (Linux)
-Create a systemd service or cron job:
+Build and run:
 ```bash
-# Cron job every hour
-0 * * * * cd /path/to/integration && python main.py >> /var/log/amazon-dynamics.log 2>&1
+docker build -t amazon-dynamics .
+docker run -p 5000:5000 -v $(pwd)/instance:/app/instance amazon-dynamics
 ```
 
-## Mapping Items
+### Environment Variables
 
-For best results, your SKUs in Amazon should match the Item Numbers in Dynamics 365.
+For production, set these environment variables:
 
-If a SKU doesn't match, the integration will:
-- Create a line item with the SKU in the description
-- You may need to manually map these items
+```bash
+export SECRET_KEY="your-secret-key-here"
+export FLASK_ENV=production
+```
+
+---
+
+## Marketplace IDs
+
+If you sell in multiple marketplaces, here are the IDs:
+
+| Marketplace | ID |
+|------------|-----|
+| US | ATVPDKIKX0DER |
+| Canada | A2EUQ1WTGCTBG2 |
+| Mexico | A1AM78C64UM0Y8 |
+| UK | A1F83G8C2ARO7P |
+| Germany | A1PA6795UKMFR9 |
+| France | A13V1IB3VIYBER |
+| Italy | APJ6JRA9NG5V4 |
+| Spain | A1RKKUPIHCS9HS |
+
+---
 
 ## Troubleshooting
 
-### "Access Denied" from Amazon API
-- Verify your refresh token hasn't expired
-- Check that your app is authorized for the marketplace
-- Ensure IAM role has correct permissions
+### "Authorization failed" from Amazon
+
+- Make sure your OAuth redirect URI in Seller Central matches exactly
+- Check that your app is approved and not in draft status
 
 ### "401 Unauthorized" from Dynamics 365
-- Check Azure AD app registration permissions
-- Verify admin consent was granted
-- Ensure client secret hasn't expired
 
-### Orders Not Appearing
+- Verify admin consent was granted for API permissions
+- Check that your client secret hasn't expired
+- Make sure you're using the correct tenant ID
+
+### Orders not syncing
+
 - Only "Shipped" orders are synced
-- Check the `days_to_look_back` setting
-- Review `integration.log` for errors
+- Check the Logs page for error details
+- Verify your items exist in Dynamics 365 (or they'll sync with descriptions only)
 
-### Duplicate Orders
-- The integration tracks processed orders in `processed_orders.json`
-- It also checks Dynamics 365 for existing orders with the same Amazon Order ID
+### Can't select company
 
-## Files Created
+- Make sure your Azure AD app has the correct permissions
+- Try disconnecting and reconnecting Dynamics 365
 
-- `config.json` - Your configuration (keep secret!)
-- `processed_orders.json` - Track of synced orders
-- `integration.log` - Log file (if configured)
+---
+
+## Files & Data
+
+| File/Folder | Purpose |
+|-------------|---------|
+| `app.py` | Main web application |
+| `instance/integration.db` | SQLite database with tokens and order history |
+| `templates/` | HTML templates for the web UI |
+
+---
 
 ## Security Notes
 
-- Never commit `config.json` to version control
-- Store credentials securely
-- Use environment variables in production
-- Rotate secrets regularly
+- Tokens are stored in a local SQLite database
+- For production, use HTTPS
+- Set a strong `SECRET_KEY` environment variable
+- The database file contains sensitive tokens - protect it accordingly

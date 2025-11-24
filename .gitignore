@@ -1,7 +1,11 @@
 # Configuration with secrets - NEVER commit this
 config.json
 
-# Processed orders tracking
+# Database with tokens and sensitive data
+instance/
+*.db
+
+# Processed orders tracking (CLI version)
 processed_orders.json
 
 # Logs

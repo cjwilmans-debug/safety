@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Setup - Amazon to Dynamics 365{% endblock %}
+
+{% block content %}
+<h1 class="h3 mb-4">Setup Connections</h1>
+
+<div class="row">
+    <!-- Amazon Setup -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-box-seam me-2" style="color: #ff9900;"></i>
+                <span>Amazon Seller Central</span>
+                {% if amazon_connected %}
+                <span class="status-badge status-connected ms-auto">Connected</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if amazon_connected %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Your Amazon Seller Central account is connected.
+                </div>
+                <form method="POST" action="{{ url_for('disconnect_amazon') }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-x-circle"></i> Disconnect
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted mb-4">
+                    Connect your Amazon Seller Central account to fetch shipped orders.
+                    You'll be redirected to Amazon to authorize access.
+                </p>
+
+                <div class="alert alert-info small">
+                    <strong>Before you start:</strong>
+                    <ol class="mb-0 mt-2">
+                        <li>Go to <a href="https://sellercentral.amazon.com/apps/develop/edit" target="_blank">Seller Central Developer Console</a></li>
+                        <li>Create or select your app</li>
+                        <li>Copy your <strong>LWA Client ID</strong> and <strong>LWA Client Secret</strong></li>
+                        <li>Add this redirect URI: <code>{{ url_for('amazon_callback', _external=True) }}</code></li>
+                    </ol>
+                </div>
+
+                <form method="POST" action="{{ url_for('setup_amazon') }}">
+                    <div class="mb-3">
+                        <label class="form-label">LWA App ID (Client ID)</label>
+                        <input type="text" name="app_id" class="form-control"
+                               placeholder="amzn1.application-oa2-client.xxxxx"
+                               value="{{ amazon_app_id }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">LWA Client Secret</label>
+                        <input type="password" name="client_secret" class="form-control"
+                               placeholder="Your client secret" required>
+                    </div>
+                    <button type="submit" class="btn btn-amazon">
+                        <i class="bi bi-box-arrow-in-right"></i> Connect to Amazon
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Dynamics 365 Setup -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header d-flex align-items-center">
+                <i class="bi bi-microsoft me-2" style="color: #00a4ef;"></i>
+                <span>Dynamics 365 Business Central</span>
+                {% if dynamics_connected %}
+                <span class="status-badge status-connected ms-auto">Connected</span>
+                {% endif %}
+            </div>
+            <div class="card-body">
+                {% if dynamics_connected %}
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle me-2"></i>
+                    Your Dynamics 365 account is connected.
+                </div>
+
+                <!-- Company Selection -->
+                {% set companies_json = get_setting('dynamics_companies', '[]') %}
+                {% set companies = companies_json|tojson|safe if companies_json else '[]' %}
+                {% if companies != '[]' %}
+                <form method="POST" action="{{ url_for('select_dynamics_company') }}" class="mb-3">
+                    <label class="form-label">Select Company</label>
+                    <select name="company_id" class="form-select" onchange="this.form.submit()">
+                        <option value="">-- Select Company --</option>
+                        <!-- Companies will be populated by JavaScript -->
+                    </select>
+                </form>
+                {% endif %}
+
+                <form method="POST" action="{{ url_for('disconnect_dynamics') }}">
+                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                        <i class="bi bi-x-circle"></i> Disconnect
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted mb-4">
+                    Connect your Dynamics 365 Business Central to create invoices and orders.
+                    You'll be redirected to Microsoft to authorize access.
+                </p>
+
+                <div class="alert alert-info small">
+                    <strong>Before you start:</strong>
+                    <ol class="mb-0 mt-2">
+                        <li>Go to <a href="https://portal.azure.com/#blade/Microsoft_AAD_RegisteredApps/ApplicationsListBlade" target="_blank">Azure Portal - App Registrations</a></li>
+                        <li>Create a new registration or select existing</li>
+                        <li>Copy your <strong>Application (client) ID</strong> and <strong>Directory (tenant) ID</strong></li>
+                        <li>Create a client secret under "Certificates & secrets"</li>
+                        <li>Add API permission: <strong>Dynamics 365 Business Central - Financials.ReadWrite.All</strong></li>
+                        <li>Add this redirect URI: <code>{{ url_for('dynamics_callback', _external=True) }}</code></li>
+                    </ol>
+                </div>
+
+                <form method="POST" action="{{ url_for('setup_dynamics') }}">
+                    <div class="mb-3">
+                        <label class="form-label">Tenant ID (Directory ID)</label>
+                        <input type="text" name="tenant_id" class="form-control"
+                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                               value="{{ dynamics_tenant_id }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Client ID (Application ID)</label>
+                        <input type="text" name="client_id" class="form-control"
+                               placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+                               value="{{ dynamics_client_id }}" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Client Secret</label>
+                        <input type="password" name="client_secret" class="form-control"
+                               placeholder="Your client secret" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Environment</label>
+                        <select name="environment" class="form-select">
+                            <option value="Production">Production</option>
+                            <option value="Sandbox">Sandbox</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-microsoft">
+                        <i class="bi bi-box-arrow-in-right"></i> Connect to Dynamics 365
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Next Steps -->
+{% if amazon_connected and dynamics_connected %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-check-circle text-success" style="font-size: 4rem;"></i>
+        <h4 class="mt-3">You're all set!</h4>
+        <p class="text-muted">Both accounts are connected. You can now sync orders.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-arrow-right"></i> Go to Dashboard
+        </a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Helper function to get settings
+function getSetting(key, defaultValue) {
+    // This would need to be implemented with an API call in production
+    return defaultValue;
+}
+</script>
+{% endblock %}
