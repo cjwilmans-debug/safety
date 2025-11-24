@@ -1,0 +1,30 @@
+# Configuration with secrets - NEVER commit this
+config.json
+
+# Processed orders tracking
+processed_orders.json
+
+# Logs
+*.log
+integration.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,6 @@
+python-amazon-sp-api>=2.8.0
+requests>=2.31.0
+msal>=1.24.0
+python-dateutil>=2.8.2
+schedule>=1.2.0
+python-dotenv>=1.0.0

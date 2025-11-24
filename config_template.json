@@ -1,0 +1,23 @@
+{
+    "amazon": {
+        "refresh_token": "YOUR_AMAZON_REFRESH_TOKEN",
+        "lwa_app_id": "YOUR_LWA_APP_ID",
+        "lwa_client_secret": "YOUR_LWA_CLIENT_SECRET",
+        "aws_access_key": "YOUR_AWS_ACCESS_KEY",
+        "aws_secret_key": "YOUR_AWS_SECRET_KEY",
+        "role_arn": "YOUR_ROLE_ARN",
+        "marketplace_id": "ATVPDKIKX0DER"
+    },
+    "dynamics365": {
+        "tenant_id": "YOUR_AZURE_TENANT_ID",
+        "client_id": "YOUR_APP_CLIENT_ID",
+        "client_secret": "YOUR_APP_CLIENT_SECRET",
+        "environment": "YOUR_DYNAMICS_ENVIRONMENT",
+        "company_id": "YOUR_COMPANY_ID"
+    },
+    "settings": {
+        "sync_interval_minutes": 60,
+        "days_to_look_back": 1,
+        "log_file": "integration.log"
+    }
+}
