@@ -23,25 +23,22 @@ This blueprint automates syncing shipped orders from Amazon to Dynamics 365 Busi
 
 ---
 
-## Step 2: Add Trigger Module
+## Step 2: Add Trigger Module - Daily End of Day
 
-### Option A: Scheduled Trigger (Recommended)
 **Module:** `Schedule`
 
 | Field | Value |
 |-------|-------|
-| Run scenario | `Every day` or `Every hour` |
-| Time | Your preferred time |
+| Run scenario | `Every day` |
+| Time | `11:55 PM` (or `23:55`) |
+| Time zone | `America/Los_Angeles` *(or your timezone)* |
 
-### Option B: Instant Trigger
-**Module:** `Amazon Seller Central` → `Watch Orders`
+This runs once per day at end of day, capturing all shipped orders from that day.
 
-| Field | Value |
-|-------|-------|
-| Connection | *(Create new - see Step 3)* |
-| Marketplace | `United States (ATVPDKIKX0DER)` |
-| Order Status | `Shipped` |
-| Limit | `100` |
+**Alternative times:**
+- `11:55 PM` - Just before midnight (recommended)
+- `12:00 AM` - Midnight (start of next day)
+- `6:00 AM` - Early morning (catches overnight processing)
 
 ---
 
@@ -211,7 +208,7 @@ Right-click on the D365 module and add:
 ## Complete Module Sequence
 
 ```
-1. Schedule (Every hour)
+1. Schedule (Daily at 11:55 PM)
       ↓
 2. Amazon: List Orders (Shipped, last 24h)
       ↓
