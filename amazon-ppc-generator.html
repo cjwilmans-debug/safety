@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon PPC Bulk Upload Generator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary-color: #ff9900;
+            --primary-dark: #e68a00;
+            --secondary-color: #232f3e;
+            --success-color: #067d62;
+            --danger-color: #d13212;
+            --light-bg: #f5f7fa;
+            --card-bg: #ffffff;
+            --text-primary: #0f1111;
+            --text-secondary: #565959;
+            --border-color: #d5d9d9;
+            --shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --radius: 8px;
+        }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 30px 0; margin-bottom: 20px; }
+        header h1 { color: var(--secondary-color); font-size: 2.2rem; margin-bottom: 10px; }
+        header .subtitle { color: var(--text-secondary); font-size: 1.1rem; }
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .card h2 {
+            color: var(--secondary-color);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--primary-color);
+        }
+        .campaign-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .campaign-type-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius);
+            background: var(--card-bg);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .campaign-type-btn:hover { border-color: var(--primary-color); transform: translateY(-2px); }
+        .campaign-type-btn.active {
+            border-color: var(--primary-color);
+            background: linear-gradient(to bottom, #fff9e6, #fff);
+            box-shadow: 0 0 0 1px var(--primary-color);
+        }
+        .campaign-type-btn .icon { font-size: 2rem; margin-bottom: 8px; }
+        .campaign-type-btn .label { font-weight: 600; color: var(--text-primary); text-align: center; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group.full-width { grid-column: 1 / -1; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(255, 153, 0, 0.2);
+        }
+        .form-group small { display: block; margin-top: 4px; color: var(--text-secondary); font-size: 12px; }
+        .form-group textarea { resize: vertical; min-height: 80px; font-family: 'Consolas', 'Monaco', monospace; }
+        .naming-convention { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
+        .preview-box {
+            grid-column: 1 / -1;
+            background: var(--light-bg);
+            padding: 15px;
+            border-radius: var(--radius);
+            border: 1px dashed var(--border-color);
+        }
+        .preview-box label { font-weight: 600; color: var(--text-secondary); font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .preview-box span { display: block; margin-top: 8px; font-size: 1.1rem; font-weight: 600; color: var(--primary-color); word-break: break-all; }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-primary {
+            background: linear-gradient(to bottom, #f7dfa5, #f0c14b);
+            border: 1px solid #a88734;
+            color: var(--text-primary);
+        }
+        .btn-primary:hover { background: linear-gradient(to bottom, #f5d78e, #eeb933); }
+        .btn-secondary { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); }
+        .btn-secondary:hover { background: var(--light-bg); }
+        .btn-success { background: var(--success-color); color: white; }
+        .btn-success:hover { background: #056652; }
+        .btn-danger { background: var(--card-bg); border: 1px solid var(--danger-color); color: var(--danger-color); }
+        .btn-danger:hover { background: #fef2f0; }
+        .btn-large { padding: 15px 40px; font-size: 18px; }
+        .template-actions { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .template-actions select { padding: 10px 12px; border: 1px solid var(--border-color); border-radius: 4px; font-size: 14px; min-width: 200px; }
+        .generate-section { text-align: center; padding: 30px; }
+        .export-options { margin-top: 15px; display: flex; justify-content: center; gap: 20px; }
+        .export-options label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+        .table-container { overflow-x: auto; margin-bottom: 20px; border: 1px solid var(--border-color); border-radius: var(--radius); max-height: 400px; }
+        #previewTable { width: 100%; border-collapse: collapse; font-size: 13px; }
+        #previewTable th, #previewTable td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); white-space: nowrap; }
+        #previewTable th { background: var(--secondary-color); color: white; font-weight: 600; position: sticky; top: 0; }
+        #previewTable tr:hover { background: var(--light-bg); }
+        #previewTable tr:nth-child(even) { background: #fafafa; }
+        footer { text-align: center; padding: 30px; color: var(--text-secondary); font-size: 14px; }
+        .campaign-specific { border-left: 4px solid var(--primary-color); }
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: var(--secondary-color);
+            color: white;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        .toast.success { background: var(--success-color); }
+        .toast.error { background: var(--danger-color); }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            header h1 { font-size: 1.6rem; }
+            .campaign-types { grid-template-columns: 1fr 1fr; }
+            .form-grid, .naming-convention { grid-template-columns: 1fr; }
+            .template-actions { flex-direction: column; align-items: stretch; }
+            .template-actions select { min-width: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Amazon PPC Bulk Upload Generator</h1>
+            <p class="subtitle">Generate bulk upload files with your naming conventions</p>
+        </header>
+
+        <main>
+            <section class="card">
+                <h2>1. Select Campaign Type</h2>
+                <div class="campaign-types">
+                    <button class="campaign-type-btn active" data-type="sponsored-products">
+                        <span class="icon">📦</span>
+                        <span class="label">Sponsored Products</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-brands">
+                        <span class="icon">🏷️</span>
+                        <span class="label">Sponsored Brands (Headline)</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-brands-video">
+                        <span class="icon">🎬</span>
+                        <span class="label">Sponsored Brands Video</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-display">
+                        <span class="icon">📺</span>
+                        <span class="label">Sponsored Display</span>
+                    </button>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>2. Naming Convention</h2>
+                <div class="naming-convention">
+                    <div class="form-group">
+                        <label for="brandName">Brand/Product Name</label>
+                        <input type="text" id="brandName" placeholder="e.g., MyBrand">
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Product Category</label>
+                        <input type="text" id="productCategory" placeholder="e.g., Electronics">
+                    </div>
+                    <div class="form-group">
+                        <label for="targetingType">Targeting Type Prefix</label>
+                        <select id="targetingType">
+                            <option value="AUTO">Auto</option>
+                            <option value="MANUAL">Manual</option>
+                            <option value="KW">Keyword</option>
+                            <option value="PT">Product Targeting</option>
+                            <option value="CAT">Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="namingSeparator">Separator</label>
+                        <select id="namingSeparator">
+                            <option value=" - "> - (dash)</option>
+                            <option value=" | "> | (pipe)</option>
+                            <option value="_">_ (underscore)</option>
+                            <option value=" "> (space)</option>
+                        </select>
+                    </div>
+                    <div class="preview-box">
+                        <label>Campaign Name Preview:</label>
+                        <span id="campaignNamePreview">SP - MyBrand - Electronics - AUTO</span>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>3. Campaign Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dailyBudget">Daily Budget ($)</label>
+                        <input type="number" id="dailyBudget" value="50" min="1" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date (optional)</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignStatus">Campaign Status</label>
+                        <select id="campaignStatus">
+                            <option value="enabled">Enabled</option>
+                            <option value="paused">Paused</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="biddingStrategy">Bidding Strategy</label>
+                        <select id="biddingStrategy">
+                            <option value="legacyForSales">Legacy For Sales</option>
+                            <option value="autoForSales">Auto For Sales</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="portfolioId">Portfolio ID (optional)</label>
+                        <input type="text" id="portfolioId" placeholder="Leave blank if none">
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>4. Ad Group Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="adGroupName">Ad Group Name Suffix</label>
+                        <input type="text" id="adGroupName" placeholder="e.g., Main, Test, Exact" value="Main">
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultBid">Default Bid ($)</label>
+                        <input type="number" id="defaultBid" value="0.75" min="0.02" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="adGroupStatus">Ad Group Status</label>
+                        <select id="adGroupStatus">
+                            <option value="enabled">Enabled</option>
+                            <option value="paused">Paused</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card campaign-specific" id="sponsored-products-settings">
+                <h2>5. Sponsored Products Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="spTargetingType">Targeting Type</label>
+                        <select id="spTargetingType">
+                            <option value="auto">Auto</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="skuList">SKUs (one per line)</label>
+                    <textarea id="skuList" rows="4" placeholder="Enter SKUs, one per line&#10;SKU123&#10;SKU456&#10;SKU789"></textarea>
+                </div>
+                <div class="form-group full-width" id="keywordsSection" style="display:none;">
+                    <label for="keywordList">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="keywordList" rows="4" placeholder="keyword phrase,exact,0.75&#10;another keyword,broad,0.50&#10;phrase match kw,phrase,0.60"></textarea>
+                    <small>Match types: exact, phrase, broad | Bid is optional (uses default bid)</small>
+                </div>
+            </section>
+
+            <section class="card campaign-specific" id="sponsored-brands-settings" style="display:none;">
+                <h2>5. Sponsored Brands (Headline) Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sbLandingPageType">Landing Page Type</label>
+                        <select id="sbLandingPageType">
+                            <option value="productList">Product List</option>
+                            <option value="store">Store</option>
+                            <option value="customUrl">Custom URL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sbStorePageUrl">Store/Landing Page URL</label>
+                        <input type="text" id="sbStorePageUrl" placeholder="https://www.amazon.com/stores/...">
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbHeadline">Headline (50 chars max)</label>
+                    <input type="text" id="sbHeadline" maxlength="50" placeholder="Shop Our Best Sellers Today">
+                    <small>Characters: <span id="headlineCount">0</span>/50</small>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbAsins">ASINs for Ad (3 required, one per line)</label>
+                    <textarea id="sbAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY&#10;B0ZZZZZZZZZ"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="sbKeywords" rows="4" placeholder="brand keyword,broad,1.00&#10;product keyword,phrase,0.85"></textarea>
+                </div>
+            </section>
+
+            <section class="card campaign-specific" id="sponsored-brands-video-settings" style="display:none;">
+                <h2>5. Sponsored Brands Video Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sbvAsin">Product ASIN</label>
+                        <input type="text" id="sbvAsin" placeholder="B0XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="sbvVideoAssetId">Video Asset ID</label>
+                        <input type="text" id="sbvVideoAssetId" placeholder="Enter video asset ID from creative assets">
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbvKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="sbvKeywords" rows="4" placeholder="video keyword,exact,1.50&#10;another keyword,broad,1.00"></textarea>
+                </div>
+            </section>
+
+            <section class="card campaign-specific" id="sponsored-display-settings" style="display:none;">
+                <h2>5. Sponsored Display Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sdTargetingType">Targeting Type</label>
+                        <select id="sdTargetingType">
+                            <option value="audiences">Audiences</option>
+                            <option value="contextual">Contextual (Product)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sdCostType">Cost Type</label>
+                        <select id="sdCostType">
+                            <option value="cpc">CPC (Cost Per Click)</option>
+                            <option value="vcpm">vCPM (viewable impressions)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sdAsins">Advertised ASINs (one per line)</label>
+                    <textarea id="sdAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY"></textarea>
+                </div>
+                <div class="form-group full-width" id="sdAudienceSection">
+                    <label for="sdAudiences">Audience Targeting (one per line)</label>
+                    <textarea id="sdAudiences" rows="3" placeholder="views remarketing&#10;purchases remarketing"></textarea>
+                </div>
+                <div class="form-group full-width" id="sdProductTargetSection" style="display:none;">
+                    <label for="sdProductTargets">Product/Category Targets (ASIN or category, one per line)</label>
+                    <textarea id="sdProductTargets" rows="3" placeholder="B0COMPETITORASIN&#10;category=Electronics"></textarea>
+                </div>
+            </section>
+
+            <section class="card">
+                <h2>6. Templates</h2>
+                <div class="template-actions">
+                    <button id="saveTemplate" class="btn btn-secondary">Save Current as Template</button>
+                    <select id="loadTemplate">
+                        <option value="">-- Load Template --</option>
+                    </select>
+                    <button id="deleteTemplate" class="btn btn-danger">Delete Selected</button>
+                </div>
+            </section>
+
+            <section class="card generate-section">
+                <button id="generateBtn" class="btn btn-primary btn-large">Generate Bulk Upload File</button>
+                <div class="export-options">
+                    <label><input type="radio" name="exportFormat" value="csv" checked> CSV (Recommended)</label>
+                </div>
+            </section>
+
+            <section class="card" id="previewSection" style="display:none;">
+                <h2>Preview</h2>
+                <div class="table-container">
+                    <table id="previewTable"><thead></thead><tbody></tbody></table>
+                </div>
+                <button id="downloadBtn" class="btn btn-success">Download File</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>Amazon PPC Bulk Upload Generator | For use with Amazon Advertising Console</p>
+        </footer>
+    </div>
+
+    <script>
+        let currentCampaignType = 'sponsored-products';
+        let generatedData = null;
+
+        const campaignPrefixes = {
+            'sponsored-products': 'SP',
+            'sponsored-brands': 'SB',
+            'sponsored-brands-video': 'SBV',
+            'sponsored-display': 'SD'
+        };
+
+        const columnDefinitions = {
+            'sponsored-products': ['Record ID','Record Type','Campaign ID','Campaign','Campaign Daily Budget','Portfolio ID','Campaign Start Date','Campaign End Date','Campaign Targeting Type','Ad Group','Max Bid','Keyword','Product Targeting ID','Match Type','SKU','Campaign Status','Ad Group Status','Status','Bidding Strategy','Placement Type','Bid Adjustment'],
+            'sponsored-brands': ['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Ad Group','Max Bid','Keyword','Match Type','Campaign Status','Ad Group Status','Status','Landing Page URL','Landing Page Type','Brand Name','Brand Logo Asset ID','Headline','ASIN 1','ASIN 2','ASIN 3','Creative Type'],
+            'sponsored-brands-video': ['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Ad Group','Max Bid','Keyword','Match Type','Campaign Status','Ad Group Status','Status','ASIN','Video Asset ID','Creative Type'],
+            'sponsored-display': ['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Tactic','Ad Group','Max Bid','Campaign Status','Ad Group Status','Status','Targeting','ASIN','Cost Type','Bid Optimization']
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('startDate').value = new Date().toISOString().split('T')[0];
+            setupCampaignTypeButtons();
+            setupNamingConventionListeners();
+            setupFormListeners();
+            setupTemplateListeners();
+            document.getElementById('generateBtn').addEventListener('click', generateBulkFile);
+            document.getElementById('downloadBtn').addEventListener('click', downloadFile);
+            loadTemplatesFromStorage();
+            updateCampaignNamePreview();
+        });
+
+        function setupCampaignTypeButtons() {
+            document.querySelectorAll('.campaign-type-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.campaign-type-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCampaignType = this.dataset.type;
+                    document.querySelectorAll('.campaign-specific').forEach(s => s.style.display = 'none');
+                    const section = document.getElementById(currentCampaignType + '-settings');
+                    if (section) section.style.display = 'block';
+                    updateCampaignNamePreview();
+                });
+            });
+        }
+
+        function setupNamingConventionListeners() {
+            ['brandName','productCategory','targetingType','namingSeparator'].forEach(field => {
+                document.getElementById(field).addEventListener('input', updateCampaignNamePreview);
+                document.getElementById(field).addEventListener('change', updateCampaignNamePreview);
+            });
+        }
+
+        function setupFormListeners() {
+            document.getElementById('spTargetingType').addEventListener('change', function() {
+                document.getElementById('keywordsSection').style.display = this.value === 'manual' ? 'block' : 'none';
+            });
+            document.getElementById('sdTargetingType').addEventListener('change', function() {
+                document.getElementById('sdAudienceSection').style.display = this.value === 'audiences' ? 'block' : 'none';
+                document.getElementById('sdProductTargetSection').style.display = this.value === 'contextual' ? 'block' : 'none';
+            });
+            document.getElementById('sbHeadline').addEventListener('input', function() {
+                document.getElementById('headlineCount').textContent = this.value.length;
+            });
+        }
+
+        function updateCampaignNamePreview() {
+            const brandName = document.getElementById('brandName').value || 'Brand';
+            const productCategory = document.getElementById('productCategory').value || 'Category';
+            const targetingType = document.getElementById('targetingType').value;
+            const separator = document.getElementById('namingSeparator').value;
+            const prefix = campaignPrefixes[currentCampaignType];
+            document.getElementById('campaignNamePreview').textContent = [prefix, brandName, productCategory, targetingType].filter(p => p).join(separator);
+        }
+
+        function generateCampaignName() {
+            const brandName = document.getElementById('brandName').value || 'Brand';
+            const productCategory = document.getElementById('productCategory').value || 'Category';
+            const targetingType = document.getElementById('targetingType').value;
+            const separator = document.getElementById('namingSeparator').value;
+            return [campaignPrefixes[currentCampaignType], brandName, productCategory, targetingType].filter(p => p).join(separator);
+        }
+
+        function generateAdGroupName() {
+            return generateCampaignName() + document.getElementById('namingSeparator').value + (document.getElementById('adGroupName').value || 'Main');
+        }
+
+        function setupTemplateListeners() {
+            document.getElementById('saveTemplate').addEventListener('click', saveTemplate);
+            document.getElementById('loadTemplate').addEventListener('change', loadTemplate);
+            document.getElementById('deleteTemplate').addEventListener('click', deleteTemplate);
+        }
+
+        function saveTemplate() {
+            const name = prompt('Enter a name for this template:');
+            if (!name) return;
+            const template = {
+                campaignType: currentCampaignType,
+                brandName: document.getElementById('brandName').value,
+                productCategory: document.getElementById('productCategory').value,
+                targetingType: document.getElementById('targetingType').value,
+                namingSeparator: document.getElementById('namingSeparator').value,
+                dailyBudget: document.getElementById('dailyBudget').value,
+                campaignStatus: document.getElementById('campaignStatus').value,
+                biddingStrategy: document.getElementById('biddingStrategy').value,
+                portfolioId: document.getElementById('portfolioId').value,
+                adGroupName: document.getElementById('adGroupName').value,
+                defaultBid: document.getElementById('defaultBid').value,
+                adGroupStatus: document.getElementById('adGroupStatus').value,
+                spTargetingType: document.getElementById('spTargetingType').value,
+                sbLandingPageType: document.getElementById('sbLandingPageType').value,
+                sbStorePageUrl: document.getElementById('sbStorePageUrl').value,
+                sbHeadline: document.getElementById('sbHeadline').value,
+                sdTargetingType: document.getElementById('sdTargetingType').value,
+                sdCostType: document.getElementById('sdCostType').value
+            };
+            let templates = JSON.parse(localStorage.getItem('ppcTemplates') || '{}');
+            templates[name] = template;
+            localStorage.setItem('ppcTemplates', JSON.stringify(templates));
+            loadTemplatesFromStorage();
+            showToast('Template saved!', 'success');
+        }
+
+        function loadTemplate(e) {
+            const name = e.target.value;
+            if (!name) return;
+            const templates = JSON.parse(localStorage.getItem('ppcTemplates') || '{}');
+            const template = templates[name];
+            if (!template) return;
+            document.querySelectorAll('.campaign-type-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.type === template.campaignType) btn.classList.add('active');
+            });
+            currentCampaignType = template.campaignType;
+            document.querySelectorAll('.campaign-specific').forEach(s => s.style.display = 'none');
+            const section = document.getElementById(template.campaignType + '-settings');
+            if (section) section.style.display = 'block';
+            Object.keys(template).forEach(key => {
+                const el = document.getElementById(key);
+                if (el && key !== 'campaignType') el.value = template[key];
+            });
+            updateCampaignNamePreview();
+            showToast('Template loaded!', 'success');
+        }
+
+        function deleteTemplate() {
+            const name = document.getElementById('loadTemplate').value;
+            if (!name) { showToast('Please select a template to delete', 'error'); return; }
+            if (!confirm(`Delete template "${name}"?`)) return;
+            let templates = JSON.parse(localStorage.getItem('ppcTemplates') || '{}');
+            delete templates[name];
+            localStorage.setItem('ppcTemplates', JSON.stringify(templates));
+            loadTemplatesFromStorage();
+            showToast('Template deleted', 'success');
+        }
+
+        function loadTemplatesFromStorage() {
+            const select = document.getElementById('loadTemplate');
+            const templates = JSON.parse(localStorage.getItem('ppcTemplates') || '{}');
+            select.innerHTML = '<option value="">-- Load Template --</option>';
+            Object.keys(templates).forEach(name => {
+                const option = document.createElement('option');
+                option.value = name;
+                option.textContent = name;
+                select.appendChild(option);
+            });
+        }
+
+        function createEmptyRow(columns) {
+            const row = {};
+            columns.forEach(col => row[col] = '');
+            return row;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const date = new Date(dateStr);
+            return `${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function generateBulkFile() {
+            const campaignName = generateCampaignName();
+            const adGroupName = generateAdGroupName();
+            let data = [];
+            switch (currentCampaignType) {
+                case 'sponsored-products': data = generateSponsoredProductsData(campaignName, adGroupName); break;
+                case 'sponsored-brands': data = generateSponsoredBrandsData(campaignName, adGroupName); break;
+                case 'sponsored-brands-video': data = generateSponsoredBrandsVideoData(campaignName, adGroupName); break;
+                case 'sponsored-display': data = generateSponsoredDisplayData(campaignName, adGroupName); break;
+            }
+            if (data.length === 0) { showToast('Please fill in the required fields', 'error'); return; }
+            generatedData = data;
+            displayPreview(data);
+            showToast('Bulk file generated!', 'success');
+        }
+
+        function generateSponsoredProductsData(campaignName, adGroupName) {
+            const data = [], columns = columnDefinitions['sponsored-products'];
+            const dailyBudget = document.getElementById('dailyBudget').value;
+            const startDate = formatDate(document.getElementById('startDate').value);
+            const endDate = formatDate(document.getElementById('endDate').value);
+            const campaignStatus = document.getElementById('campaignStatus').value;
+            const biddingStrategy = document.getElementById('biddingStrategy').value;
+            const portfolioId = document.getElementById('portfolioId').value;
+            const defaultBid = document.getElementById('defaultBid').value;
+            const adGroupStatus = document.getElementById('adGroupStatus').value;
+            const targetingType = document.getElementById('spTargetingType').value;
+            const skus = document.getElementById('skuList').value.split('\n').map(s => s.trim()).filter(s => s);
+            if (skus.length === 0) return [];
+
+            let row = createEmptyRow(columns);
+            row['Record Type'] = 'Campaign'; row['Campaign'] = campaignName; row['Campaign Daily Budget'] = dailyBudget;
+            row['Portfolio ID'] = portfolioId; row['Campaign Start Date'] = startDate; row['Campaign End Date'] = endDate;
+            row['Campaign Targeting Type'] = targetingType === 'auto' ? 'Auto' : 'Manual';
+            row['Campaign Status'] = campaignStatus; row['Bidding Strategy'] = biddingStrategy;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad Group'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['Max Bid'] = defaultBid; row['Ad Group Status'] = adGroupStatus;
+            data.push(row);
+
+            skus.forEach(sku => {
+                row = createEmptyRow(columns);
+                row['Record Type'] = 'Product Ad'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                row['SKU'] = sku; row['Status'] = 'enabled';
+                data.push(row);
+            });
+
+            if (targetingType === 'manual') {
+                document.getElementById('keywordList').value.split('\n').map(k => k.trim()).filter(k => k).forEach(keywordLine => {
+                    const parts = keywordLine.split(',').map(p => p.trim());
+                    row = createEmptyRow(columns);
+                    row['Record Type'] = 'Keyword'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                    row['Keyword'] = parts[0]; row['Match Type'] = parts[1] || 'broad';
+                    row['Max Bid'] = parts[2] || defaultBid; row['Status'] = 'enabled';
+                    data.push(row);
+                });
+            }
+            return data;
+        }
+
+        function generateSponsoredBrandsData(campaignName, adGroupName) {
+            const data = [], columns = columnDefinitions['sponsored-brands'];
+            const dailyBudget = document.getElementById('dailyBudget').value;
+            const startDate = formatDate(document.getElementById('startDate').value);
+            const endDate = formatDate(document.getElementById('endDate').value);
+            const campaignStatus = document.getElementById('campaignStatus').value;
+            const portfolioId = document.getElementById('portfolioId').value;
+            const defaultBid = document.getElementById('defaultBid').value;
+            const adGroupStatus = document.getElementById('adGroupStatus').value;
+            const landingPageType = document.getElementById('sbLandingPageType').value;
+            const storePageUrl = document.getElementById('sbStorePageUrl').value;
+            const headline = document.getElementById('sbHeadline').value;
+            const asins = document.getElementById('sbAsins').value.split('\n').map(a => a.trim()).filter(a => a);
+            const keywords = document.getElementById('sbKeywords').value.split('\n').map(k => k.trim()).filter(k => k);
+            if (asins.length < 3) { showToast('Sponsored Brands requires at least 3 ASINs', 'error'); return []; }
+
+            let row = createEmptyRow(columns);
+            row['Record Type'] = 'Campaign'; row['Campaign'] = campaignName; row['Budget'] = dailyBudget;
+            row['Budget Type'] = 'daily'; row['Portfolio ID'] = portfolioId; row['Start Date'] = startDate;
+            row['End Date'] = endDate; row['Campaign Status'] = campaignStatus;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad Group'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['Ad Group Status'] = adGroupStatus;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['Landing Page URL'] = storePageUrl; row['Landing Page Type'] = landingPageType;
+            row['Headline'] = headline; row['ASIN 1'] = asins[0] || ''; row['ASIN 2'] = asins[1] || '';
+            row['ASIN 3'] = asins[2] || ''; row['Creative Type'] = 'productCollection'; row['Status'] = 'enabled';
+            data.push(row);
+
+            keywords.forEach(keywordLine => {
+                const parts = keywordLine.split(',').map(p => p.trim());
+                row = createEmptyRow(columns);
+                row['Record Type'] = 'Keyword'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                row['Keyword'] = parts[0]; row['Match Type'] = parts[1] || 'broad';
+                row['Max Bid'] = parts[2] || defaultBid; row['Status'] = 'enabled';
+                data.push(row);
+            });
+            return data;
+        }
+
+        function generateSponsoredBrandsVideoData(campaignName, adGroupName) {
+            const data = [], columns = columnDefinitions['sponsored-brands-video'];
+            const dailyBudget = document.getElementById('dailyBudget').value;
+            const startDate = formatDate(document.getElementById('startDate').value);
+            const endDate = formatDate(document.getElementById('endDate').value);
+            const campaignStatus = document.getElementById('campaignStatus').value;
+            const portfolioId = document.getElementById('portfolioId').value;
+            const defaultBid = document.getElementById('defaultBid').value;
+            const adGroupStatus = document.getElementById('adGroupStatus').value;
+            const asin = document.getElementById('sbvAsin').value.trim();
+            const videoAssetId = document.getElementById('sbvVideoAssetId').value.trim();
+            const keywords = document.getElementById('sbvKeywords').value.split('\n').map(k => k.trim()).filter(k => k);
+            if (!asin) { showToast('Please enter a product ASIN', 'error'); return []; }
+
+            let row = createEmptyRow(columns);
+            row['Record Type'] = 'Campaign'; row['Campaign'] = campaignName; row['Budget'] = dailyBudget;
+            row['Budget Type'] = 'daily'; row['Portfolio ID'] = portfolioId; row['Start Date'] = startDate;
+            row['End Date'] = endDate; row['Campaign Status'] = campaignStatus;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad Group'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['Ad Group Status'] = adGroupStatus;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['ASIN'] = asin; row['Video Asset ID'] = videoAssetId; row['Creative Type'] = 'video'; row['Status'] = 'enabled';
+            data.push(row);
+
+            keywords.forEach(keywordLine => {
+                const parts = keywordLine.split(',').map(p => p.trim());
+                row = createEmptyRow(columns);
+                row['Record Type'] = 'Keyword'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                row['Keyword'] = parts[0]; row['Match Type'] = parts[1] || 'broad';
+                row['Max Bid'] = parts[2] || defaultBid; row['Status'] = 'enabled';
+                data.push(row);
+            });
+            return data;
+        }
+
+        function generateSponsoredDisplayData(campaignName, adGroupName) {
+            const data = [], columns = columnDefinitions['sponsored-display'];
+            const dailyBudget = document.getElementById('dailyBudget').value;
+            const startDate = formatDate(document.getElementById('startDate').value);
+            const endDate = formatDate(document.getElementById('endDate').value);
+            const campaignStatus = document.getElementById('campaignStatus').value;
+            const portfolioId = document.getElementById('portfolioId').value;
+            const defaultBid = document.getElementById('defaultBid').value;
+            const adGroupStatus = document.getElementById('adGroupStatus').value;
+            const targetingType = document.getElementById('sdTargetingType').value;
+            const costType = document.getElementById('sdCostType').value;
+            const asins = document.getElementById('sdAsins').value.split('\n').map(a => a.trim()).filter(a => a);
+            if (asins.length === 0) { showToast('Please enter at least one ASIN', 'error'); return []; }
+            const tactic = targetingType === 'audiences' ? 'T00030' : 'T00020';
+
+            let row = createEmptyRow(columns);
+            row['Record Type'] = 'Campaign'; row['Campaign'] = campaignName; row['Budget'] = dailyBudget;
+            row['Budget Type'] = 'daily'; row['Portfolio ID'] = portfolioId; row['Start Date'] = startDate;
+            row['End Date'] = endDate; row['Tactic'] = tactic; row['Campaign Status'] = campaignStatus;
+            data.push(row);
+
+            row = createEmptyRow(columns);
+            row['Record Type'] = 'Ad Group'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+            row['Max Bid'] = defaultBid; row['Ad Group Status'] = adGroupStatus;
+            row['Cost Type'] = costType; row['Bid Optimization'] = 'reach';
+            data.push(row);
+
+            asins.forEach(asin => {
+                row = createEmptyRow(columns);
+                row['Record Type'] = 'Product Ad'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                row['ASIN'] = asin; row['Status'] = 'enabled';
+                data.push(row);
+            });
+
+            const targets = targetingType === 'audiences'
+                ? document.getElementById('sdAudiences').value.split('\n').map(a => a.trim()).filter(a => a)
+                : document.getElementById('sdProductTargets').value.split('\n').map(t => t.trim()).filter(t => t);
+
+            targets.forEach(target => {
+                row = createEmptyRow(columns);
+                row['Record Type'] = 'Targeting'; row['Campaign'] = campaignName; row['Ad Group'] = adGroupName;
+                row['Targeting'] = target; row['Status'] = 'enabled';
+                data.push(row);
+            });
+            return data;
+        }
+
+        function displayPreview(data) {
+            const previewSection = document.getElementById('previewSection');
+            const thead = document.querySelector('#previewTable thead');
+            const tbody = document.querySelector('#previewTable tbody');
+            if (data.length === 0) { previewSection.style.display = 'none'; return; }
+            const columns = Object.keys(data[0]);
+            thead.innerHTML = '<tr>' + columns.map(col => `<th>${col}</th>`).join('') + '</tr>';
+            tbody.innerHTML = data.map(row => '<tr>' + columns.map(col => `<td>${row[col] || ''}</td>`).join('') + '</tr>').join('');
+            previewSection.style.display = 'block';
+            previewSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function downloadFile() {
+            if (!generatedData || generatedData.length === 0) { showToast('No data to download', 'error'); return; }
+            const campaignName = generateCampaignName().replace(/[^a-zA-Z0-9]/g, '_');
+            const filename = `${campaignName}_bulk_upload.csv`;
+            const columns = Object.keys(generatedData[0]);
+            let csv = columns.join(',') + '\n';
+            generatedData.forEach(row => {
+                csv += columns.map(col => {
+                    let val = row[col] || '';
+                    if (val.toString().includes(',') || val.toString().includes('"')) {
+                        val = '"' + val.toString().replace(/"/g, '""') + '"';
+                    }
+                    return val;
+                }).join(',') + '\n';
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+            showToast('CSV downloaded!', 'success');
+        }
+
+        function showToast(message, type = 'info') {
+            document.querySelectorAll('.toast').forEach(t => t.remove());
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.animation = 'slideIn 0.3s ease reverse'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
+    </script>
+</body>
+</html>
