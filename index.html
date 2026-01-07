@@ -4,288 +4,346 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Amazon PPC Bulk Upload Generator</title>
-    <link rel="stylesheet" href="styles.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f2f5; color: #1a1a1a; line-height: 1.5; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { text-align: center; padding: 40px 20px; background: linear-gradient(135deg, #232f3e 0%, #37475a 100%); color: white; margin-bottom: 30px; border-radius: 12px; }
+        header h1 { font-size: 28px; margin-bottom: 8px; }
+        header p { opacity: 0.9; font-size: 16px; }
+        .card { background: white; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .card h2 { font-size: 18px; color: #232f3e; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 3px solid #ff9900; }
+        .campaign-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .campaign-btn { padding: 20px 16px; border: 2px solid #e0e0e0; border-radius: 10px; background: white; cursor: pointer; text-align: center; transition: all 0.2s; }
+        .campaign-btn:hover { border-color: #ff9900; transform: translateY(-2px); }
+        .campaign-btn.active { border-color: #ff9900; background: #fff8e6; box-shadow: 0 0 0 3px rgba(255,153,0,0.2); }
+        .campaign-btn .icon { font-size: 32px; display: block; margin-bottom: 8px; }
+        .campaign-btn .label { font-weight: 600; font-size: 14px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group.full { grid-column: 1 / -1; }
+        label { font-weight: 600; font-size: 14px; margin-bottom: 6px; color: #333; }
+        input, select, textarea { padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; transition: border-color 0.2s, box-shadow 0.2s; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: #ff9900; box-shadow: 0 0 0 3px rgba(255,153,0,0.15); }
+        textarea { min-height: 100px; font-family: monospace; resize: vertical; }
+        small { color: #666; font-size: 12px; margin-top: 4px; }
+        .preview-box { background: #f8f9fa; padding: 16px; border-radius: 8px; border: 2px dashed #ddd; margin-top: 16px; }
+        .preview-box label { color: #666; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
+        .preview-box .preview-text { font-size: 18px; font-weight: 700; color: #ff9900; margin-top: 8px; word-break: break-all; }
+        .btn { padding: 14px 28px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(to bottom, #f7ca55, #f0b020); color: #1a1a1a; border: 1px solid #c49a1a; }
+        .btn-primary:hover { background: linear-gradient(to bottom, #f5c040, #e6a010); transform: translateY(-1px); }
+        .btn-success { background: #00a86b; color: white; }
+        .btn-success:hover { background: #008f5a; }
+        .btn-secondary { background: #f0f0f0; color: #333; border: 1px solid #ddd; }
+        .btn-secondary:hover { background: #e5e5e5; }
+        .btn-danger { background: white; color: #d32f2f; border: 1px solid #d32f2f; }
+        .btn-danger:hover { background: #fff5f5; }
+        .btn-large { padding: 18px 48px; font-size: 18px; }
+        .generate-section { text-align: center; padding: 40px 20px; }
+        .template-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+        .template-row select { flex: 1; min-width: 200px; }
+        .table-wrap { overflow-x: auto; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 20px; max-height: 350px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #232f3e; color: white; padding: 12px 10px; text-align: left; position: sticky; top: 0; white-space: nowrap; }
+        td { padding: 10px; border-bottom: 1px solid #eee; white-space: nowrap; }
+        tr:hover { background: #f8f9fa; }
+        .hidden { display: none !important; }
+        .toast { position: fixed; bottom: 24px; right: 24px; padding: 16px 24px; background: #232f3e; color: white; border-radius: 8px; font-weight: 500; animation: slideUp 0.3s ease; z-index: 1000; }
+        .toast.success { background: #00a86b; }
+        .toast.error { background: #d32f2f; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        footer { text-align: center; padding: 30px; color: #888; font-size: 14px; }
+        @media (max-width: 600px) { .campaign-grid { grid-template-columns: 1fr 1fr; } .form-row { grid-template-columns: 1fr; } .template-row { flex-direction: column; } .template-row select { width: 100%; } }
+    </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1>Amazon PPC Bulk Upload Generator</h1>
-            <p class="subtitle">Generate bulk upload files with your naming conventions</p>
+            <p>Create bulk upload files with your naming conventions</p>
         </header>
 
-        <main>
-            <!-- Campaign Type Selection -->
-            <section class="card">
-                <h2>1. Select Campaign Type</h2>
-                <div class="campaign-types">
-                    <button class="campaign-type-btn active" data-type="sponsored-products">
-                        <span class="icon">📦</span>
-                        <span class="label">Sponsored Products</span>
-                    </button>
-                    <button class="campaign-type-btn" data-type="sponsored-brands">
-                        <span class="icon">🏷️</span>
-                        <span class="label">Sponsored Brands (Headline)</span>
-                    </button>
-                    <button class="campaign-type-btn" data-type="sponsored-brands-video">
-                        <span class="icon">🎬</span>
-                        <span class="label">Sponsored Brands Video</span>
-                    </button>
-                    <button class="campaign-type-btn" data-type="sponsored-display">
-                        <span class="icon">📺</span>
-                        <span class="label">Sponsored Display</span>
-                    </button>
-                </div>
-            </section>
+        <div class="card">
+            <h2>1. Campaign Type</h2>
+            <div class="campaign-grid">
+                <button class="campaign-btn active" data-type="sp"><span class="icon">📦</span><span class="label">Sponsored Products</span></button>
+                <button class="campaign-btn" data-type="sb"><span class="icon">🏷️</span><span class="label">Sponsored Brands</span></button>
+                <button class="campaign-btn" data-type="sbv"><span class="icon">🎬</span><span class="label">SB Video</span></button>
+                <button class="campaign-btn" data-type="sd"><span class="icon">📺</span><span class="label">Sponsored Display</span></button>
+            </div>
+        </div>
 
-            <!-- Naming Convention Settings -->
-            <section class="card">
-                <h2>2. Naming Convention</h2>
-                <div class="naming-convention">
-                    <div class="form-group">
-                        <label for="brandName">Brand/Product Name</label>
-                        <input type="text" id="brandName" placeholder="e.g., MyBrand" value="">
-                    </div>
-                    <div class="form-group">
-                        <label for="productCategory">Product Category</label>
-                        <input type="text" id="productCategory" placeholder="e.g., Electronics" value="">
-                    </div>
-                    <div class="form-group">
-                        <label for="targetingType">Targeting Type Prefix</label>
-                        <select id="targetingType">
-                            <option value="AUTO">Auto</option>
-                            <option value="MANUAL">Manual</option>
-                            <option value="KW">Keyword</option>
-                            <option value="PT">Product Targeting</option>
-                            <option value="CAT">Category</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="namingSeparator">Separator</label>
-                        <select id="namingSeparator">
-                            <option value=" - "> - (dash)</option>
-                            <option value=" | "> | (pipe)</option>
-                            <option value="_">_ (underscore)</option>
-                            <option value=" "> (space)</option>
-                        </select>
-                    </div>
-                    <div class="preview-box">
-                        <label>Campaign Name Preview:</label>
-                        <span id="campaignNamePreview">SP - MyBrand - Electronics - AUTO</span>
-                    </div>
+        <div class="card">
+            <h2>2. Naming Convention</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Brand Name</label><input type="text" id="brandName" placeholder="MyBrand"></div>
+                <div class="form-group"><label>Category</label><input type="text" id="category" placeholder="Electronics"></div>
+                <div class="form-group"><label>Targeting Prefix</label>
+                    <select id="targetPrefix"><option value="AUTO">AUTO</option><option value="MANUAL">MANUAL</option><option value="KW">KW</option><option value="PT">PT</option><option value="EXACT">EXACT</option><option value="BROAD">BROAD</option></select>
                 </div>
-            </section>
+                <div class="form-group"><label>Separator</label>
+                    <select id="separator"><option value=" - "> - </option><option value=" | "> | </option><option value="_">_</option><option value=" "> (space)</option></select>
+                </div>
+            </div>
+            <div class="preview-box"><label>Preview</label><div class="preview-text" id="preview">SP - Brand - Category - AUTO</div></div>
+        </div>
 
-            <!-- Campaign Settings -->
-            <section class="card">
-                <h2>3. Campaign Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="dailyBudget">Daily Budget ($)</label>
-                        <input type="number" id="dailyBudget" value="50" min="1" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label for="startDate">Start Date</label>
-                        <input type="date" id="startDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="endDate">End Date (optional)</label>
-                        <input type="date" id="endDate">
-                    </div>
-                    <div class="form-group">
-                        <label for="campaignStatus">Campaign Status</label>
-                        <select id="campaignStatus">
-                            <option value="enabled">Enabled</option>
-                            <option value="paused">Paused</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="biddingStrategy">Bidding Strategy</label>
-                        <select id="biddingStrategy">
-                            <option value="legacyForSales">Legacy For Sales</option>
-                            <option value="autoForSales">Auto For Sales</option>
-                            <option value="manual">Manual</option>
-                        </select>
-                    </div>
-                    <div class="form-group" id="portfolioGroup">
-                        <label for="portfolioId">Portfolio ID (optional)</label>
-                        <input type="text" id="portfolioId" placeholder="Leave blank if none">
-                    </div>
-                </div>
-            </section>
+        <div class="card">
+            <h2>3. Campaign Settings</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Daily Budget ($)</label><input type="number" id="budget" value="50" min="1"></div>
+                <div class="form-group"><label>Start Date</label><input type="date" id="startDate"></div>
+                <div class="form-group"><label>End Date</label><input type="date" id="endDate"></div>
+                <div class="form-group"><label>Status</label><select id="status"><option value="enabled">Enabled</option><option value="paused">Paused</option></select></div>
+                <div class="form-group"><label>Bidding Strategy</label><select id="bidStrategy"><option value="legacyForSales">Legacy For Sales</option><option value="autoForSales">Auto For Sales</option><option value="manual">Manual</option></select></div>
+                <div class="form-group"><label>Portfolio ID</label><input type="text" id="portfolio" placeholder="Optional"></div>
+            </div>
+        </div>
 
-            <!-- Ad Group Settings -->
-            <section class="card">
-                <h2>4. Ad Group Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="adGroupName">Ad Group Name Suffix</label>
-                        <input type="text" id="adGroupName" placeholder="e.g., Main, Test, Exact" value="Main">
-                    </div>
-                    <div class="form-group">
-                        <label for="defaultBid">Default Bid ($)</label>
-                        <input type="number" id="defaultBid" value="0.75" min="0.02" step="0.01">
-                    </div>
-                    <div class="form-group">
-                        <label for="adGroupStatus">Ad Group Status</label>
-                        <select id="adGroupStatus">
-                            <option value="enabled">Enabled</option>
-                            <option value="paused">Paused</option>
-                        </select>
-                    </div>
-                </div>
-            </section>
+        <div class="card">
+            <h2>4. Ad Group Settings</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Ad Group Suffix</label><input type="text" id="adGroupSuffix" value="Main" placeholder="Main"></div>
+                <div class="form-group"><label>Default Bid ($)</label><input type="number" id="defaultBid" value="0.75" min="0.02" step="0.01"></div>
+            </div>
+        </div>
 
-            <!-- Sponsored Products Specific -->
-            <section class="card campaign-specific" id="sponsored-products-settings">
-                <h2>5. Sponsored Products Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="spTargetingType">Targeting Type</label>
-                        <select id="spTargetingType">
-                            <option value="auto">Auto</option>
-                            <option value="manual">Manual</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group full-width">
-                    <label for="skuList">SKUs (one per line)</label>
-                    <textarea id="skuList" rows="4" placeholder="Enter SKUs, one per line&#10;SKU123&#10;SKU456&#10;SKU789"></textarea>
-                </div>
-                <div class="form-group full-width" id="keywordsSection">
-                    <label for="keywordList">Keywords (one per line, format: keyword,matchtype,bid)</label>
-                    <textarea id="keywordList" rows="4" placeholder="keyword phrase,exact,0.75&#10;another keyword,broad,0.50&#10;phrase match kw,phrase,0.60"></textarea>
-                    <small>Match types: exact, phrase, broad | Bid is optional (uses default bid)</small>
-                </div>
-            </section>
+        <div class="card" id="spSettings">
+            <h2>5. Sponsored Products</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Targeting</label><select id="spTargeting"><option value="auto">Auto</option><option value="manual">Manual</option></select></div>
+            </div>
+            <div class="form-group full"><label>SKUs (one per line)</label><textarea id="skus" placeholder="SKU123&#10;SKU456&#10;SKU789"></textarea></div>
+            <div class="form-group full hidden" id="kwSection"><label>Keywords (keyword,matchtype,bid)</label><textarea id="keywords" placeholder="best product,exact,0.75&#10;cheap product,broad,0.50"></textarea><small>Match: exact, phrase, broad | Bid optional</small></div>
+        </div>
 
-            <!-- Sponsored Brands Specific -->
-            <section class="card campaign-specific" id="sponsored-brands-settings" style="display:none;">
-                <h2>5. Sponsored Brands (Headline) Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="sbLandingPageType">Landing Page Type</label>
-                        <select id="sbLandingPageType">
-                            <option value="productList">Product List</option>
-                            <option value="store">Store</option>
-                            <option value="customUrl">Custom URL</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="sbStorePageUrl">Store/Landing Page URL</label>
-                        <input type="text" id="sbStorePageUrl" placeholder="https://www.amazon.com/stores/...">
-                    </div>
-                </div>
-                <div class="form-group full-width">
-                    <label for="sbHeadline">Headline (50 chars max)</label>
-                    <input type="text" id="sbHeadline" maxlength="50" placeholder="Shop Our Best Sellers Today">
-                    <small>Characters: <span id="headlineCount">0</span>/50</small>
-                </div>
-                <div class="form-group full-width">
-                    <label for="sbAsins">ASINs for Ad (3 required, one per line)</label>
-                    <textarea id="sbAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY&#10;B0ZZZZZZZZZ"></textarea>
-                </div>
-                <div class="form-group full-width">
-                    <label for="sbKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
-                    <textarea id="sbKeywords" rows="4" placeholder="brand keyword,broad,1.00&#10;product keyword,phrase,0.85"></textarea>
-                </div>
-            </section>
+        <div class="card hidden" id="sbSettings">
+            <h2>5. Sponsored Brands</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Landing Page Type</label><select id="sbLanding"><option value="store">Store</option><option value="productList">Product List</option></select></div>
+                <div class="form-group"><label>Store URL</label><input type="text" id="sbUrl" placeholder="https://amazon.com/stores/..."></div>
+            </div>
+            <div class="form-group full"><label>Headline (50 chars)</label><input type="text" id="sbHeadline" maxlength="50" placeholder="Shop Our Best Sellers"><small id="charCount">0/50</small></div>
+            <div class="form-group full"><label>ASINs (3 required)</label><textarea id="sbAsins" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY&#10;B0ZZZZZZZZZ"></textarea></div>
+            <div class="form-group full"><label>Keywords</label><textarea id="sbKeywords" placeholder="brand keyword,broad,1.00"></textarea></div>
+        </div>
 
-            <!-- Sponsored Brands Video Specific -->
-            <section class="card campaign-specific" id="sponsored-brands-video-settings" style="display:none;">
-                <h2>5. Sponsored Brands Video Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="sbvAsin">Product ASIN</label>
-                        <input type="text" id="sbvAsin" placeholder="B0XXXXXXXXX">
-                    </div>
-                    <div class="form-group">
-                        <label for="sbvVideoAssetId">Video Asset ID</label>
-                        <input type="text" id="sbvVideoAssetId" placeholder="Enter video asset ID from creative assets">
-                    </div>
-                </div>
-                <div class="form-group full-width">
-                    <label for="sbvKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
-                    <textarea id="sbvKeywords" rows="4" placeholder="video keyword,exact,1.50&#10;another keyword,broad,1.00"></textarea>
-                </div>
-            </section>
+        <div class="card hidden" id="sbvSettings">
+            <h2>5. Sponsored Brands Video</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Product ASIN</label><input type="text" id="sbvAsin" placeholder="B0XXXXXXXXX"></div>
+                <div class="form-group"><label>Video Asset ID</label><input type="text" id="sbvVideo" placeholder="From creative assets"></div>
+            </div>
+            <div class="form-group full"><label>Keywords</label><textarea id="sbvKeywords" placeholder="video keyword,exact,1.50"></textarea></div>
+        </div>
 
-            <!-- Sponsored Display Specific -->
-            <section class="card campaign-specific" id="sponsored-display-settings" style="display:none;">
-                <h2>5. Sponsored Display Settings</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="sdTargetingType">Targeting Type</label>
-                        <select id="sdTargetingType">
-                            <option value="audiences">Audiences</option>
-                            <option value="contextual">Contextual (Product)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="sdCostType">Cost Type</label>
-                        <select id="sdCostType">
-                            <option value="cpc">CPC (Cost Per Click)</option>
-                            <option value="vcpm">vCPM (viewable impressions)</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group full-width">
-                    <label for="sdAsins">Advertised ASINs (one per line)</label>
-                    <textarea id="sdAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY"></textarea>
-                </div>
-                <div class="form-group full-width" id="sdAudienceSection">
-                    <label for="sdAudiences">Audience Targeting (one per line)</label>
-                    <textarea id="sdAudiences" rows="3" placeholder="views remarketing&#10;purchases remarketing"></textarea>
-                </div>
-                <div class="form-group full-width" id="sdProductTargetSection" style="display:none;">
-                    <label for="sdProductTargets">Product/Category Targets (ASIN or category, one per line)</label>
-                    <textarea id="sdProductTargets" rows="3" placeholder="B0COMPETITORASIN&#10;category=Electronics"></textarea>
-                </div>
-            </section>
+        <div class="card hidden" id="sdSettings">
+            <h2>5. Sponsored Display</h2>
+            <div class="form-row">
+                <div class="form-group"><label>Targeting</label><select id="sdTargeting"><option value="audiences">Audiences</option><option value="contextual">Contextual</option></select></div>
+                <div class="form-group"><label>Cost Type</label><select id="sdCost"><option value="cpc">CPC</option><option value="vcpm">vCPM</option></select></div>
+            </div>
+            <div class="form-group full"><label>ASINs</label><textarea id="sdAsins" placeholder="B0XXXXXXXXX"></textarea></div>
+            <div class="form-group full" id="sdAudience"><label>Audiences</label><textarea id="sdAudiences" placeholder="views remarketing&#10;purchases remarketing"></textarea></div>
+            <div class="form-group full hidden" id="sdProduct"><label>Product Targets</label><textarea id="sdTargets" placeholder="B0COMPETITOR"></textarea></div>
+        </div>
 
-            <!-- Saved Templates -->
-            <section class="card">
-                <h2>6. Templates</h2>
-                <div class="template-actions">
-                    <button id="saveTemplate" class="btn btn-secondary">Save Current as Template</button>
-                    <select id="loadTemplate">
-                        <option value="">-- Load Template --</option>
-                    </select>
-                    <button id="deleteTemplate" class="btn btn-danger">Delete Selected</button>
-                </div>
-            </section>
+        <div class="card">
+            <h2>6. Templates</h2>
+            <div class="template-row">
+                <button class="btn btn-secondary" id="saveBtn">Save Template</button>
+                <select id="templateSelect"><option value="">-- Load Template --</option></select>
+                <button class="btn btn-danger" id="deleteBtn">Delete</button>
+            </div>
+        </div>
 
-            <!-- Generate Button -->
-            <section class="card generate-section">
-                <button id="generateBtn" class="btn btn-primary btn-large">Generate Bulk Upload File</button>
-                <div class="export-options">
-                    <label>
-                        <input type="radio" name="exportFormat" value="csv" checked> CSV
-                    </label>
-                    <label>
-                        <input type="radio" name="exportFormat" value="xlsx"> Excel (.xlsx)
-                    </label>
-                </div>
-            </section>
+        <div class="card generate-section">
+            <button class="btn btn-primary btn-large" id="generateBtn">Generate Bulk Upload File</button>
+        </div>
 
-            <!-- Preview Section -->
-            <section class="card" id="previewSection" style="display:none;">
-                <h2>Preview</h2>
-                <div class="table-container">
-                    <table id="previewTable">
-                        <thead></thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-                <button id="downloadBtn" class="btn btn-success">Download File</button>
-            </section>
-        </main>
+        <div class="card hidden" id="previewCard">
+            <h2>Preview</h2>
+            <div class="table-wrap"><table id="table"><thead></thead><tbody></tbody></table></div>
+            <button class="btn btn-success" id="downloadBtn">Download CSV</button>
+        </div>
 
-        <footer>
-            <p>Amazon PPC Bulk Upload Generator | For use with Amazon Advertising Console</p>
-        </footer>
+        <footer>Amazon PPC Bulk Upload Generator</footer>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <script src="app.js"></script>
+<script>
+let type='sp', data=null;
+const prefix={sp:'SP',sb:'SB',sbv:'SBV',sd:'SD'};
+const cols={
+    sp:['Record ID','Record Type','Campaign ID','Campaign','Campaign Daily Budget','Portfolio ID','Campaign Start Date','Campaign End Date','Campaign Targeting Type','Ad Group','Max Bid','Keyword','Product Targeting ID','Match Type','SKU','Campaign Status','Ad Group Status','Status','Bidding Strategy'],
+    sb:['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Ad Group','Max Bid','Keyword','Match Type','Campaign Status','Ad Group Status','Status','Landing Page URL','Landing Page Type','Headline','ASIN 1','ASIN 2','ASIN 3','Creative Type'],
+    sbv:['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Ad Group','Max Bid','Keyword','Match Type','Campaign Status','Ad Group Status','Status','ASIN','Video Asset ID','Creative Type'],
+    sd:['Record ID','Record Type','Campaign ID','Campaign','Budget','Budget Type','Portfolio ID','Start Date','End Date','Tactic','Ad Group','Max Bid','Campaign Status','Ad Group Status','Status','Targeting','ASIN','Cost Type','Bid Optimization']
+};
+
+document.addEventListener('DOMContentLoaded',()=>{
+    document.getElementById('startDate').value=new Date().toISOString().split('T')[0];
+    document.querySelectorAll('.campaign-btn').forEach(b=>b.onclick=()=>{
+        document.querySelectorAll('.campaign-btn').forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        type=b.dataset.type;
+        ['spSettings','sbSettings','sbvSettings','sdSettings'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+        document.getElementById(type+'Settings').classList.remove('hidden');
+        updatePreview();
+    });
+    ['brandName','category','targetPrefix','separator'].forEach(id=>document.getElementById(id).addEventListener('input',updatePreview));
+    ['targetPrefix','separator'].forEach(id=>document.getElementById(id).addEventListener('change',updatePreview));
+    document.getElementById('spTargeting').onchange=e=>document.getElementById('kwSection').classList.toggle('hidden',e.target.value==='auto');
+    document.getElementById('sdTargeting').onchange=e=>{document.getElementById('sdAudience').classList.toggle('hidden',e.target.value!=='audiences');document.getElementById('sdProduct').classList.toggle('hidden',e.target.value==='audiences');};
+    document.getElementById('sbHeadline').oninput=e=>document.getElementById('charCount').textContent=e.target.value.length+'/50';
+    document.getElementById('saveBtn').onclick=saveTemplate;
+    document.getElementById('templateSelect').onchange=loadTemplate;
+    document.getElementById('deleteBtn').onclick=deleteTemplate;
+    document.getElementById('generateBtn').onclick=generate;
+    document.getElementById('downloadBtn').onclick=download;
+    loadTemplates();
+    updatePreview();
+});
+
+function updatePreview(){
+    const b=document.getElementById('brandName').value||'Brand';
+    const c=document.getElementById('category').value||'Category';
+    const t=document.getElementById('targetPrefix').value;
+    const s=document.getElementById('separator').value;
+    document.getElementById('preview').textContent=[prefix[type],b,c,t].join(s);
+}
+
+function getCampaignName(){
+    const b=document.getElementById('brandName').value||'Brand';
+    const c=document.getElementById('category').value||'Category';
+    const t=document.getElementById('targetPrefix').value;
+    const s=document.getElementById('separator').value;
+    return [prefix[type],b,c,t].join(s);
+}
+
+function getAdGroupName(){return getCampaignName()+document.getElementById('separator').value+(document.getElementById('adGroupSuffix').value||'Main');}
+
+function row(c){const r={};c.forEach(k=>r[k]='');return r;}
+
+function fmtDate(d){if(!d)return '';const x=new Date(d);return `${x.getFullYear()}${String(x.getMonth()+1).padStart(2,'0')}${String(x.getDate()).padStart(2,'0')}`;}
+
+function generate(){
+    const cn=getCampaignName(),an=getAdGroupName();
+    const budget=document.getElementById('budget').value;
+    const start=fmtDate(document.getElementById('startDate').value);
+    const end=fmtDate(document.getElementById('endDate').value);
+    const status=document.getElementById('status').value;
+    const bidStrat=document.getElementById('bidStrategy').value;
+    const portfolio=document.getElementById('portfolio').value;
+    const bid=document.getElementById('defaultBid').value;
+    let d=[];
+
+    if(type==='sp'){
+        const c=cols.sp,tgt=document.getElementById('spTargeting').value;
+        const skus=document.getElementById('skus').value.split('\n').map(s=>s.trim()).filter(s=>s);
+        if(!skus.length){toast('Enter at least one SKU','error');return;}
+        let r=row(c);r['Record Type']='Campaign';r['Campaign']=cn;r['Campaign Daily Budget']=budget;r['Portfolio ID']=portfolio;r['Campaign Start Date']=start;r['Campaign End Date']=end;r['Campaign Targeting Type']=tgt==='auto'?'Auto':'Manual';r['Campaign Status']=status;r['Bidding Strategy']=bidStrat;d.push(r);
+        r=row(c);r['Record Type']='Ad Group';r['Campaign']=cn;r['Ad Group']=an;r['Max Bid']=bid;r['Ad Group Status']=status;d.push(r);
+        skus.forEach(sku=>{r=row(c);r['Record Type']='Product Ad';r['Campaign']=cn;r['Ad Group']=an;r['SKU']=sku;r['Status']='enabled';d.push(r);});
+        if(tgt==='manual'){
+            document.getElementById('keywords').value.split('\n').map(k=>k.trim()).filter(k=>k).forEach(line=>{
+                const p=line.split(',').map(x=>x.trim());r=row(c);r['Record Type']='Keyword';r['Campaign']=cn;r['Ad Group']=an;r['Keyword']=p[0];r['Match Type']=p[1]||'broad';r['Max Bid']=p[2]||bid;r['Status']='enabled';d.push(r);
+            });
+        }
+    }else if(type==='sb'){
+        const c=cols.sb;
+        const asins=document.getElementById('sbAsins').value.split('\n').map(s=>s.trim()).filter(s=>s);
+        if(asins.length<3){toast('Need 3 ASINs for Sponsored Brands','error');return;}
+        let r=row(c);r['Record Type']='Campaign';r['Campaign']=cn;r['Budget']=budget;r['Budget Type']='daily';r['Portfolio ID']=portfolio;r['Start Date']=start;r['End Date']=end;r['Campaign Status']=status;d.push(r);
+        r=row(c);r['Record Type']='Ad Group';r['Campaign']=cn;r['Ad Group']=an;r['Ad Group Status']=status;d.push(r);
+        r=row(c);r['Record Type']='Ad';r['Campaign']=cn;r['Ad Group']=an;r['Landing Page URL']=document.getElementById('sbUrl').value;r['Landing Page Type']=document.getElementById('sbLanding').value;r['Headline']=document.getElementById('sbHeadline').value;r['ASIN 1']=asins[0]||'';r['ASIN 2']=asins[1]||'';r['ASIN 3']=asins[2]||'';r['Creative Type']='productCollection';r['Status']='enabled';d.push(r);
+        document.getElementById('sbKeywords').value.split('\n').map(k=>k.trim()).filter(k=>k).forEach(line=>{
+            const p=line.split(',').map(x=>x.trim());r=row(c);r['Record Type']='Keyword';r['Campaign']=cn;r['Ad Group']=an;r['Keyword']=p[0];r['Match Type']=p[1]||'broad';r['Max Bid']=p[2]||bid;r['Status']='enabled';d.push(r);
+        });
+    }else if(type==='sbv'){
+        const c=cols.sbv,asin=document.getElementById('sbvAsin').value.trim();
+        if(!asin){toast('Enter product ASIN','error');return;}
+        let r=row(c);r['Record Type']='Campaign';r['Campaign']=cn;r['Budget']=budget;r['Budget Type']='daily';r['Portfolio ID']=portfolio;r['Start Date']=start;r['End Date']=end;r['Campaign Status']=status;d.push(r);
+        r=row(c);r['Record Type']='Ad Group';r['Campaign']=cn;r['Ad Group']=an;r['Ad Group Status']=status;d.push(r);
+        r=row(c);r['Record Type']='Ad';r['Campaign']=cn;r['Ad Group']=an;r['ASIN']=asin;r['Video Asset ID']=document.getElementById('sbvVideo').value;r['Creative Type']='video';r['Status']='enabled';d.push(r);
+        document.getElementById('sbvKeywords').value.split('\n').map(k=>k.trim()).filter(k=>k).forEach(line=>{
+            const p=line.split(',').map(x=>x.trim());r=row(c);r['Record Type']='Keyword';r['Campaign']=cn;r['Ad Group']=an;r['Keyword']=p[0];r['Match Type']=p[1]||'broad';r['Max Bid']=p[2]||bid;r['Status']='enabled';d.push(r);
+        });
+    }else if(type==='sd'){
+        const c=cols.sd,tgt=document.getElementById('sdTargeting').value;
+        const asins=document.getElementById('sdAsins').value.split('\n').map(s=>s.trim()).filter(s=>s);
+        if(!asins.length){toast('Enter at least one ASIN','error');return;}
+        const tactic=tgt==='audiences'?'T00030':'T00020';
+        let r=row(c);r['Record Type']='Campaign';r['Campaign']=cn;r['Budget']=budget;r['Budget Type']='daily';r['Portfolio ID']=portfolio;r['Start Date']=start;r['End Date']=end;r['Tactic']=tactic;r['Campaign Status']=status;d.push(r);
+        r=row(c);r['Record Type']='Ad Group';r['Campaign']=cn;r['Ad Group']=an;r['Max Bid']=bid;r['Ad Group Status']=status;r['Cost Type']=document.getElementById('sdCost').value;r['Bid Optimization']='reach';d.push(r);
+        asins.forEach(asin=>{r=row(c);r['Record Type']='Product Ad';r['Campaign']=cn;r['Ad Group']=an;r['ASIN']=asin;r['Status']='enabled';d.push(r);});
+        const targets=tgt==='audiences'?document.getElementById('sdAudiences').value:document.getElementById('sdTargets').value;
+        targets.split('\n').map(t=>t.trim()).filter(t=>t).forEach(t=>{r=row(c);r['Record Type']='Targeting';r['Campaign']=cn;r['Ad Group']=an;r['Targeting']=t;r['Status']='enabled';d.push(r);});
+    }
+
+    data=d;
+    showPreview();
+    toast('Generated!','success');
+}
+
+function showPreview(){
+    if(!data||!data.length)return;
+    const keys=Object.keys(data[0]);
+    document.querySelector('#table thead').innerHTML='<tr>'+keys.map(k=>`<th>${k}</th>`).join('')+'</tr>';
+    document.querySelector('#table tbody').innerHTML=data.map(r=>'<tr>'+keys.map(k=>`<td>${r[k]||''}</td>`).join('')+'</tr>').join('');
+    document.getElementById('previewCard').classList.remove('hidden');
+    document.getElementById('previewCard').scrollIntoView({behavior:'smooth'});
+}
+
+function download(){
+    if(!data||!data.length){toast('Nothing to download','error');return;}
+    const keys=Object.keys(data[0]);
+    let csv=keys.join(',')+'\n';
+    data.forEach(r=>{csv+=keys.map(k=>{let v=r[k]||'';if(v.includes(',')||v.includes('"'))v='"'+v.replace(/"/g,'""')+'"';return v;}).join(',')+'\n';});
+    const blob=new Blob([csv],{type:'text/csv'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=getCampaignName().replace(/[^a-zA-Z0-9]/g,'_')+'_bulk.csv';
+    a.click();
+    toast('Downloaded!','success');
+}
+
+function saveTemplate(){
+    const name=prompt('Template name:');if(!name)return;
+    const t={type,brandName:document.getElementById('brandName').value,category:document.getElementById('category').value,targetPrefix:document.getElementById('targetPrefix').value,separator:document.getElementById('separator').value,budget:document.getElementById('budget').value,status:document.getElementById('status').value,bidStrategy:document.getElementById('bidStrategy').value,portfolio:document.getElementById('portfolio').value,adGroupSuffix:document.getElementById('adGroupSuffix').value,defaultBid:document.getElementById('defaultBid').value};
+    let all=JSON.parse(localStorage.getItem('ppcTpl')||'{}');all[name]=t;localStorage.setItem('ppcTpl',JSON.stringify(all));
+    loadTemplates();toast('Saved!','success');
+}
+
+function loadTemplate(e){
+    const name=e.target.value;if(!name)return;
+    const all=JSON.parse(localStorage.getItem('ppcTpl')||'{}'),t=all[name];if(!t)return;
+    document.querySelectorAll('.campaign-btn').forEach(b=>{b.classList.remove('active');if(b.dataset.type===t.type)b.classList.add('active');});
+    type=t.type;
+    ['spSettings','sbSettings','sbvSettings','sdSettings'].forEach(s=>document.getElementById(s).classList.add('hidden'));
+    document.getElementById(type+'Settings').classList.remove('hidden');
+    ['brandName','category','targetPrefix','separator','budget','status','bidStrategy','portfolio','adGroupSuffix','defaultBid'].forEach(id=>{if(t[id]!==undefined)document.getElementById(id).value=t[id];});
+    updatePreview();toast('Loaded!','success');
+}
+
+function deleteTemplate(){
+    const name=document.getElementById('templateSelect').value;if(!name){toast('Select a template','error');return;}
+    if(!confirm('Delete "'+name+'"?'))return;
+    let all=JSON.parse(localStorage.getItem('ppcTpl')||'{}');delete all[name];localStorage.setItem('ppcTpl',JSON.stringify(all));
+    loadTemplates();toast('Deleted','success');
+}
+
+function loadTemplates(){
+    const sel=document.getElementById('templateSelect'),all=JSON.parse(localStorage.getItem('ppcTpl')||'{}');
+    sel.innerHTML='<option value="">-- Load Template --</option>';
+    Object.keys(all).forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+}
+
+function toast(msg,t='info'){
+    document.querySelectorAll('.toast').forEach(x=>x.remove());
+    const d=document.createElement('div');d.className='toast '+t;d.textContent=msg;document.body.appendChild(d);
+    setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300);},2500);
+}
+</script>
 </body>
 </html>
