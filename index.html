@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon PPC Bulk Upload Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Amazon PPC Bulk Upload Generator</h1>
+            <p class="subtitle">Generate bulk upload files with your naming conventions</p>
+        </header>
+
+        <main>
+            <!-- Campaign Type Selection -->
+            <section class="card">
+                <h2>1. Select Campaign Type</h2>
+                <div class="campaign-types">
+                    <button class="campaign-type-btn active" data-type="sponsored-products">
+                        <span class="icon">📦</span>
+                        <span class="label">Sponsored Products</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-brands">
+                        <span class="icon">🏷️</span>
+                        <span class="label">Sponsored Brands (Headline)</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-brands-video">
+                        <span class="icon">🎬</span>
+                        <span class="label">Sponsored Brands Video</span>
+                    </button>
+                    <button class="campaign-type-btn" data-type="sponsored-display">
+                        <span class="icon">📺</span>
+                        <span class="label">Sponsored Display</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Naming Convention Settings -->
+            <section class="card">
+                <h2>2. Naming Convention</h2>
+                <div class="naming-convention">
+                    <div class="form-group">
+                        <label for="brandName">Brand/Product Name</label>
+                        <input type="text" id="brandName" placeholder="e.g., MyBrand" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="productCategory">Product Category</label>
+                        <input type="text" id="productCategory" placeholder="e.g., Electronics" value="">
+                    </div>
+                    <div class="form-group">
+                        <label for="targetingType">Targeting Type Prefix</label>
+                        <select id="targetingType">
+                            <option value="AUTO">Auto</option>
+                            <option value="MANUAL">Manual</option>
+                            <option value="KW">Keyword</option>
+                            <option value="PT">Product Targeting</option>
+                            <option value="CAT">Category</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="namingSeparator">Separator</label>
+                        <select id="namingSeparator">
+                            <option value=" - "> - (dash)</option>
+                            <option value=" | "> | (pipe)</option>
+                            <option value="_">_ (underscore)</option>
+                            <option value=" "> (space)</option>
+                        </select>
+                    </div>
+                    <div class="preview-box">
+                        <label>Campaign Name Preview:</label>
+                        <span id="campaignNamePreview">SP - MyBrand - Electronics - AUTO</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Campaign Settings -->
+            <section class="card">
+                <h2>3. Campaign Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="dailyBudget">Daily Budget ($)</label>
+                        <input type="number" id="dailyBudget" value="50" min="1" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="startDate">Start Date</label>
+                        <input type="date" id="startDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="endDate">End Date (optional)</label>
+                        <input type="date" id="endDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="campaignStatus">Campaign Status</label>
+                        <select id="campaignStatus">
+                            <option value="enabled">Enabled</option>
+                            <option value="paused">Paused</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="biddingStrategy">Bidding Strategy</label>
+                        <select id="biddingStrategy">
+                            <option value="legacyForSales">Legacy For Sales</option>
+                            <option value="autoForSales">Auto For Sales</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="portfolioGroup">
+                        <label for="portfolioId">Portfolio ID (optional)</label>
+                        <input type="text" id="portfolioId" placeholder="Leave blank if none">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Ad Group Settings -->
+            <section class="card">
+                <h2>4. Ad Group Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="adGroupName">Ad Group Name Suffix</label>
+                        <input type="text" id="adGroupName" placeholder="e.g., Main, Test, Exact" value="Main">
+                    </div>
+                    <div class="form-group">
+                        <label for="defaultBid">Default Bid ($)</label>
+                        <input type="number" id="defaultBid" value="0.75" min="0.02" step="0.01">
+                    </div>
+                    <div class="form-group">
+                        <label for="adGroupStatus">Ad Group Status</label>
+                        <select id="adGroupStatus">
+                            <option value="enabled">Enabled</option>
+                            <option value="paused">Paused</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sponsored Products Specific -->
+            <section class="card campaign-specific" id="sponsored-products-settings">
+                <h2>5. Sponsored Products Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="spTargetingType">Targeting Type</label>
+                        <select id="spTargetingType">
+                            <option value="auto">Auto</option>
+                            <option value="manual">Manual</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="skuList">SKUs (one per line)</label>
+                    <textarea id="skuList" rows="4" placeholder="Enter SKUs, one per line&#10;SKU123&#10;SKU456&#10;SKU789"></textarea>
+                </div>
+                <div class="form-group full-width" id="keywordsSection">
+                    <label for="keywordList">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="keywordList" rows="4" placeholder="keyword phrase,exact,0.75&#10;another keyword,broad,0.50&#10;phrase match kw,phrase,0.60"></textarea>
+                    <small>Match types: exact, phrase, broad | Bid is optional (uses default bid)</small>
+                </div>
+            </section>
+
+            <!-- Sponsored Brands Specific -->
+            <section class="card campaign-specific" id="sponsored-brands-settings" style="display:none;">
+                <h2>5. Sponsored Brands (Headline) Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sbLandingPageType">Landing Page Type</label>
+                        <select id="sbLandingPageType">
+                            <option value="productList">Product List</option>
+                            <option value="store">Store</option>
+                            <option value="customUrl">Custom URL</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sbStorePageUrl">Store/Landing Page URL</label>
+                        <input type="text" id="sbStorePageUrl" placeholder="https://www.amazon.com/stores/...">
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbHeadline">Headline (50 chars max)</label>
+                    <input type="text" id="sbHeadline" maxlength="50" placeholder="Shop Our Best Sellers Today">
+                    <small>Characters: <span id="headlineCount">0</span>/50</small>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbAsins">ASINs for Ad (3 required, one per line)</label>
+                    <textarea id="sbAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY&#10;B0ZZZZZZZZZ"></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="sbKeywords" rows="4" placeholder="brand keyword,broad,1.00&#10;product keyword,phrase,0.85"></textarea>
+                </div>
+            </section>
+
+            <!-- Sponsored Brands Video Specific -->
+            <section class="card campaign-specific" id="sponsored-brands-video-settings" style="display:none;">
+                <h2>5. Sponsored Brands Video Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sbvAsin">Product ASIN</label>
+                        <input type="text" id="sbvAsin" placeholder="B0XXXXXXXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="sbvVideoAssetId">Video Asset ID</label>
+                        <input type="text" id="sbvVideoAssetId" placeholder="Enter video asset ID from creative assets">
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sbvKeywords">Keywords (one per line, format: keyword,matchtype,bid)</label>
+                    <textarea id="sbvKeywords" rows="4" placeholder="video keyword,exact,1.50&#10;another keyword,broad,1.00"></textarea>
+                </div>
+            </section>
+
+            <!-- Sponsored Display Specific -->
+            <section class="card campaign-specific" id="sponsored-display-settings" style="display:none;">
+                <h2>5. Sponsored Display Settings</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="sdTargetingType">Targeting Type</label>
+                        <select id="sdTargetingType">
+                            <option value="audiences">Audiences</option>
+                            <option value="contextual">Contextual (Product)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sdCostType">Cost Type</label>
+                        <select id="sdCostType">
+                            <option value="cpc">CPC (Cost Per Click)</option>
+                            <option value="vcpm">vCPM (viewable impressions)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group full-width">
+                    <label for="sdAsins">Advertised ASINs (one per line)</label>
+                    <textarea id="sdAsins" rows="3" placeholder="B0XXXXXXXXX&#10;B0YYYYYYYYY"></textarea>
+                </div>
+                <div class="form-group full-width" id="sdAudienceSection">
+                    <label for="sdAudiences">Audience Targeting (one per line)</label>
+                    <textarea id="sdAudiences" rows="3" placeholder="views remarketing&#10;purchases remarketing"></textarea>
+                </div>
+                <div class="form-group full-width" id="sdProductTargetSection" style="display:none;">
+                    <label for="sdProductTargets">Product/Category Targets (ASIN or category, one per line)</label>
+                    <textarea id="sdProductTargets" rows="3" placeholder="B0COMPETITORASIN&#10;category=Electronics"></textarea>
+                </div>
+            </section>
+
+            <!-- Saved Templates -->
+            <section class="card">
+                <h2>6. Templates</h2>
+                <div class="template-actions">
+                    <button id="saveTemplate" class="btn btn-secondary">Save Current as Template</button>
+                    <select id="loadTemplate">
+                        <option value="">-- Load Template --</option>
+                    </select>
+                    <button id="deleteTemplate" class="btn btn-danger">Delete Selected</button>
+                </div>
+            </section>
+
+            <!-- Generate Button -->
+            <section class="card generate-section">
+                <button id="generateBtn" class="btn btn-primary btn-large">Generate Bulk Upload File</button>
+                <div class="export-options">
+                    <label>
+                        <input type="radio" name="exportFormat" value="csv" checked> CSV
+                    </label>
+                    <label>
+                        <input type="radio" name="exportFormat" value="xlsx"> Excel (.xlsx)
+                    </label>
+                </div>
+            </section>
+
+            <!-- Preview Section -->
+            <section class="card" id="previewSection" style="display:none;">
+                <h2>Preview</h2>
+                <div class="table-container">
+                    <table id="previewTable">
+                        <thead></thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+                <button id="downloadBtn" class="btn btn-success">Download File</button>
+            </section>
+        </main>
+
+        <footer>
+            <p>Amazon PPC Bulk Upload Generator | For use with Amazon Advertising Console</p>
+        </footer>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
